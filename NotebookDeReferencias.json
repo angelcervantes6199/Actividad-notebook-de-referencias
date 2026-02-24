@@ -1,0 +1,608 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "pO321EhVw0Xg"
+      },
+      "source": [
+        "# Referencias y Pasaje por Valor/Referencia\n",
+        "**Objetivo:** entender y practicar cómo funcionan las **referencias** en Python, qué cambia con **inmutables vs mutables**, y cómo se observa el **pasaje por valor** y **por referencia** en la práctica.\n",
+        "\n",
+        "**Contenido:**\n",
+        "1) Conceptos clave (objeto, referencia, mutabilidad, aliasing) info={Conceptosclave}\n",
+        "2) Visual mental de memoria (cajas/flechas) info={ VisualMentalDeMemoria}\n",
+        "3) Inmutables: `int`, `str` (efecto tipo \"valor\")\n",
+        "4) Mutables: `list`, `dict`, objetos de clase (efecto \"referencia\")\n",
+        "5) Funciones: mutar vs reasignar; `id()` para visualizar \n",
+        "6) Copias: alias, `copy.copy`, `copy.deepcopy`\n",
+        "7) Comparativa con Java (primitivos vs objetos)\n",
+        "8) Errores comunes y buenas prácticas\n",
+        "9) Ejercicios guiados y Reto final\n"
+      ],
+      "id": "pO321EhVw0Xg"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "wuznL-NGw0Xh"
+      },
+      "source": [
+        "## 1) Conceptos clave\n",
+        "- **Objeto**: entidad en memoria con estado (datos) y, a veces, comportamiento (métodos).\n",
+        "- **Referencia**: la variable **no guarda el objeto**, sino un **vínculo** (dirección) hacia el objeto en memoria.\n",
+        "- **Mutabilidad**:\n",
+        "  - **Inmutables**: `int`, `float`, `str`, `tuple`, `bool` → modificar \"crea\" un **nuevo** objeto.\n",
+        "  - **Mutables**: `list`, `dict`, `set`, instancias de clases → se pueden **cambiar in-place**.\n",
+        "- **Aliasing**: dos o más variables que apuntan **al mismo objeto** en memoria.\n",
+        "- **`id(obj)`** en Python: número que (típicamente) refleja la **dirección/identidad** del objeto en memoria durante su vida útil.\n"
+      ],
+      "id": "wuznL-NGw0Xh"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "j6luaM1pw0Xh"
+      },
+      "source": [
+        "## 2) Visual mental (cajas y flechas)\n",
+        "```\n",
+        "p1 ─────────┐\n",
+        "            ▼\n",
+        "        [ Objeto Pokemon(nombre='Psyduck', nivel=10) ]\n",
+        "            ▲\n",
+        "p2 ─────────┘\n",
+        "```\n",
+        "Si `p2 = p1`, **ambas** referencias apuntan al **mismo** objeto: cambiarlo desde una afecta lo que se ve desde la otra.\n"
+      ],
+      "id": "j6luaM1pw0Xh"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "-YbsY-vcw0Xh"
+      },
+      "source": [
+        "## 3) Pasaje tipo valor\n",
+        "Cuando pasas o reasignas una variable de tipo **inmutables** (como `int` o `str`), verás que **no cambia el valor original**, porque cualquier \"cambio\" crea un **nuevo objeto**.\n"
+      ],
+      "id": "-YbsY-vcw0Xh"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "yMIQK6Yuw0Xh"
+      },
+      "outputs": [],
+      "source": [
+        "def aumentar(n):\n",
+        "    print(\"[aumentar] id(n) antes:\", id(n), \"valor:\", n)\n",
+        "    n = n + 1\n",
+        "    print(\"[aumentar] id(n) después:\", id(n), \"valor:\", n)\n",
+        "\n",
+        "x = 5\n",
+        "print(\"[main] id(x):\", id(x), \"valor:\", x)\n",
+        "aumentar(x)\n",
+        "print(\"[main] id(x):\", id(x), \"valor:\", x, \"  <-- x NO cambió\")"
+      ],
+      "id": "yMIQK6Yuw0Xh"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "PJAESVA2w0Xi"
+      },
+      "source": [
+        "`int` es **inmutable**.\n",
+        "Dentro de la función, `n+1` crea **otro** objeto y la referencia local `n` apunta al nuevo. `x` sigue igual.\n",
+        "\n",
+        "Probemos ahora con `str` (también inmutable):\n"
+      ],
+      "id": "PJAESVA2w0Xi"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "r5z5EFbJw0Xi",
+        "outputId": "781cd8da-1f12-4b3a-f9f4-16baa6feb431"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "[main] id(t): 133968910113680 valor: Hola\n",
+            "[anexar_texto] id(s) antes: 133968910113680 valor: Hola\n",
+            "[anexar_texto] id(s) después: 133968910112480 valor: Hola!\n",
+            "[main] id(t): 133968910113680 valor: Hola   <-- t NO cambió\n"
+          ]
+        }
+      ],
+      "source": [
+        "def anexar_texto(s):\n",
+        "    print(\"[anexar_texto] id(s) antes:\", id(s), \"valor:\", s)\n",
+        "    s = s + \"!\"  # crea una nueva cadena\n",
+        "    print(\"[anexar_texto] id(s) después:\", id(s), \"valor:\", s)\n",
+        "\n",
+        "t = \"Hola\"\n",
+        "print(\"[main] id(t):\", id(t), \"valor:\", t)\n",
+        "anexar_texto(t)\n",
+        "print(\"[main] id(t):\", id(t), \"valor:\", t, \"  <-- t NO cambió\")"
+      ],
+      "id": "r5z5EFbJw0Xi"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "VhAZztMkw0Xi"
+      },
+      "source": [
+        "## 4) Pasaje tipo referencia\n",
+        "Cuando pasas una variable de tipo mutable (`list`, `dict`, objetos) a una función, lo que viaja es la referencia al mismo objeto en memoria.\n",
+        "\n"
+      ],
+      "id": "VhAZztMkw0Xi"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "FkuoFVD4w0Xi"
+      },
+      "outputs": [],
+      "source": [
+        "def agregar_elemento(lista):\n",
+        "    print(\"[agregar_elemento] id(lista) antes:\", id(lista), \"contenido:\", lista)\n",
+        "    lista.append(\"nuevo\")\n",
+        "    print(\"[agregar_elemento] id(lista) después:\", id(lista), \"contenido:\", lista)\n",
+        "\n",
+        "nums = [1, 2, 3]\n",
+        "print(\"[main] id(nums):\", id(nums), \"contenido:\", nums)\n",
+        "agregar_elemento(nums)\n",
+        "print(\"[main] id(nums):\", id(nums), \"contenido:\", nums, \"  <-- la lista SÍ cambió\")"
+      ],
+      "id": "FkuoFVD4w0Xi"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "gdR8Hymww0Xi"
+      },
+      "outputs": [],
+      "source": [
+        "def actualizar_dict(d):\n",
+        "    print(\"[actualizar_dict] id(d) antes:\", id(d), \"contenido:\", d)\n",
+        "    d[\"ok\"] = True\n",
+        "    print(\"[actualizar_dict] id(d) después:\", id(d), \"contenido:\", d)\n",
+        "\n",
+        "info = {\"user\": \"ana\"}\n",
+        "print(\"[main] id(info):\", id(info), \"contenido:\", info)\n",
+        "actualizar_dict(info)\n",
+        "print(\"[main] id(info):\", id(info), \"contenido:\", info, \"  <-- el dict SÍ cambió\")"
+      ],
+      "id": "gdR8Hymww0Xi"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "rvxGoxSOw0Xi"
+      },
+      "source": [
+        "**Mutar vs Reasignar (clave):**\n",
+        "- *Mutar in-place* (p. ej. `lista.append(...)`) **modifica el mismo objeto**.\n",
+        "- *Reasignar* (p. ej. `lista = [1,2]` dentro de la función) **solo cambia la referencia local**, no el objeto original.\n"
+      ],
+      "id": "rvxGoxSOw0Xi"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 2,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "--W-ttgCw0Xi",
+        "outputId": "7bc88432-0573-4ba9-bf26-75eb9e6b9418"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Antes: [1, 2, 3] id: 133968908280384\n",
+            "Después de mutar_en_sitio: [1, 2, 3, 999] id: 133968908280384\n",
+            "Después de reasignar: [1, 2, 3, 999] id: 133968908280384 <-- NO cambió\n"
+          ]
+        }
+      ],
+      "source": [
+        "def mutar_en_sitio(lst):\n",
+        "    lst.append(999)\n",
+        "\n",
+        "def reasignar(lst):\n",
+        "    lst = [999]  # solo la variable local ahora apunta a otro objeto\n",
+        "\n",
+        "base = [1,2,3]\n",
+        "print(\"Antes:\", base, \"id:\", id(base))\n",
+        "mutar_en_sitio(base)\n",
+        "print(\"Después de mutar_en_sitio:\", base, \"id:\", id(base))\n",
+        "reasignar(base)\n",
+        "print(\"Después de reasignar:\", base, \"id:\", id(base), \"<-- NO cambió\")"
+      ],
+      "id": "--W-ttgCw0Xi"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "pJjf5iP_w0Xj"
+      },
+      "source": [
+        "## 5) Objetos de clase (y aliasing)\n",
+        "Creamos una clase simple y vemos aliasing: cuando dos (o más) variables hacen referencia al mismo objeto en memoria.\n"
+      ],
+      "id": "pJjf5iP_w0Xj"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 4,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Ke5ztOW-w0Xj",
+        "outputId": "a8bd5086-a208-41a1-8279-48be11994d9d"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "id(p1): 133968910116256 | id(p2): 133968910116256\n",
+            "p1.nombre: Golduck | p2.nombre: Golduck <-- ambos ven el cambio\n"
+          ]
+        }
+      ],
+      "source": [
+        "class Pokemon:\n",
+        "    def __init__(self, nombre, nivel):\n",
+        "        self.nombre = nombre\n",
+        "        self.nivel = nivel\n",
+        "\n",
+        "p1 = Pokemon(\"Psyduck\", 10)\n",
+        "p2 = p1  # ALIAS: misma referencia\n",
+        "print(\"id(p1):\", id(p1), \"| id(p2):\", id(p2))\n",
+        "p2.nombre = \"Golduck\"\n",
+        "print(\"p1.nombre:\", p1.nombre, \"| p2.nombre:\", p2.nombre, \"<-- ambos ven el cambio\")"
+      ],
+      "id": "Ke5ztOW-w0Xj"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "JBf5OaMPw0Xj"
+      },
+      "source": [
+        "## 6) Copias: alias vs `copy` vs `deepcopy`\n",
+        "- **Alias**: `p2 = p1`\n",
+        "  - Cuando dos variables apuntan al mismo objeto.\n",
+        "- **Copia superficial**: `copy.copy(obj)`\n",
+        "  - Cuando dos variables apuntan al mismo objeto.\n",
+        "- **Copia profunda**: `copy.deepcopy(obj)`\n",
+        "  - Cuando se crea un objeto nuevo y también duplica todo lo que está dentro.\n",
+        "  - Duplica también estructuras anidadas.\n"
+      ],
+      "id": "JBf5OaMPw0Xj"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 5,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "SUWGAGX8w0Xj",
+        "outputId": "d3d18545-ffe2-425f-e7bc-50d976d2f6b7"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "id(p): 133968910120096 | alias: 133968910120096 | copia: 133968910115536 | profunda: 133968910110304\n",
+            "p.nombre: Golduck | copia.nombre: Psyduck | profunda.nombre: Psyduck\n",
+            "p.movs: ['Confusión', 'Agua', 'Psíquico']\n",
+            "copia.movs: ['Confusión', 'Agua', 'Psíquico'] <-- comparte lista interna en copia superficial\n",
+            "profunda.movs: ['Confusión', 'Agua'] <-- aislada en deepcopy\n"
+          ]
+        }
+      ],
+      "source": [
+        "import copy\n",
+        "\n",
+        "p = Pokemon(\"Psyduck\", 10)\n",
+        "p.movs = [\"Confusión\", \"Agua\"]\n",
+        "\n",
+        "alias = p\n",
+        "copia = copy.copy(p)      # copia superficial\n",
+        "profunda = copy.deepcopy(p)\n",
+        "\n",
+        "print(\"id(p):\", id(p), \"| alias:\", id(alias), \"| copia:\", id(copia), \"| profunda:\", id(profunda))\n",
+        "\n",
+        "alias.nombre = \"Golduck\"\n",
+        "print(\"p.nombre:\", p.nombre, \"| copia.nombre:\", copia.nombre, \"| profunda.nombre:\", profunda.nombre)\n",
+        "\n",
+        "p.movs.append(\"Psíquico\")\n",
+        "print(\"p.movs:\", p.movs)\n",
+        "print(\"copia.movs:\", copia.movs, \"<-- comparte lista interna en copia superficial\")\n",
+        "print(\"profunda.movs:\", profunda.movs, \"<-- aislada en deepcopy\")"
+      ],
+      "id": "SUWGAGX8w0Xj"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "AK0E6ULLw0Xj"
+      },
+      "source": [
+        "## 7) Pasaje a funciones: mutar vs reasignar (con `id()`)\n",
+        "\n",
+        "Observa cómo viaja la **misma referencia** cuando mutamos objetos, y qué pasa si **reasignamos** dentro de la función.\n"
+      ],
+      "id": "AK0E6ULLw0Xj"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 7,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "335tM0eGw0Xj",
+        "outputId": "12271d3e-928a-4c7d-f106-e01722adb821"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "[main] id(q): 133968908425008 nivel: 5\n",
+            "[subir_nivel] id(poke): 133968908425008\n",
+            "[main] q.nivel: 6 <-- cambió\n",
+            "[reemplazar_objeto_local] id(poke) antes: 133968908425008\n",
+            "[reemplazar_objeto_local] id(poke) después: 133968908427024\n",
+            "[main] id(q): 133968908425008 nombre: Eevee nivel: 6 <-- NO se reemplazó afuera\n"
+          ]
+        }
+      ],
+      "source": [
+        "def subir_nivel(poke):\n",
+        "    print(\"[subir_nivel] id(poke):\", id(poke))\n",
+        "    poke.nivel += 1  # mutación in-place\n",
+        "\n",
+        "def reemplazar_objeto_local(poke):\n",
+        "    print(\"[reemplazar_objeto_local] id(poke) antes:\", id(poke))\n",
+        "    poke = Pokemon(\"Nuevo\", 1)  # reasignación local\n",
+        "    print(\"[reemplazar_objeto_local] id(poke) después:\", id(poke))\n",
+        "\n",
+        "q = Pokemon(\"Eevee\", 5)\n",
+        "print(\"[main] id(q):\", id(q), \"nivel:\", q.nivel)\n",
+        "subir_nivel(q)\n",
+        "print(\"[main] q.nivel:\", q.nivel, \"<-- cambió\")\n",
+        "reemplazar_objeto_local(q)\n",
+        "print(\"[main] id(q):\", id(q), \"nombre:\", q.nombre, \"nivel:\", q.nivel, \"<-- NO se reemplazó afuera\")"
+      ],
+      "id": "335tM0eGw0Xj"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "S7IlsqBnw0Xj"
+      },
+      "source": [
+        "**Clave:**\n",
+        "- Mutar atributos/colecciones **sí** impacta al objeto original.\n",
+        "- Reasignar la variable **dentro** de la función **no** cambia la referencia fuera.\n",
+        "\n",
+        "### Comparativa rápida con Java\n",
+        "- **Primitivos** (int, double, boolean...) → **por valor**: no cambian.\n",
+        "- **Objetos** → Java pasa **por valor la referencia** (copia la dirección): puedes **mutar** el objeto dentro del método.\n",
+        "\n",
+        "```java\n",
+        "class Pokemon { String nombre; int nivel; Pokemon(String n,int l){ nombre=n; nivel=l; } }\n",
+        "static void subirNivel(Pokemon p){ p.nivel++; }\n",
+        "```\n",
+        "En `subirNivel`, `p` apunta al mismo objeto; `p.nivel++` afecta al original.\n"
+      ],
+      "id": "S7IlsqBnw0Xj"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "cEsqOncWw0Xj"
+      },
+      "source": [
+        "## 8) Errores comunes y buenas prácticas\n",
+        "- **Argumentos mutables por defecto** (antipatrón):\n",
+        "```python\n",
+        "def malo(x, acc=[]):  # 'acc' se comparte entre llamadas\n",
+        "    acc.append(x)\n",
+        "    return acc\n",
+        "```\n",
+        "Usa en su lugar:\n",
+        "```python\n",
+        "def bueno(x, acc=None):\n",
+        "    if acc is None:\n",
+        "        acc = []\n",
+        "    acc.append(x)\n",
+        "    return acc\n",
+        "```\n",
+        "- Documenta si tu función **muta** sus argumentos.\n",
+        "- Si no quieres efectos laterales, **trabaja con copias** (`copy`/`deepcopy`).\n",
+        "- Nombra funciones que mutan con verbos claros: `agregar_`, `actualizar_`, `mutar_`.\n"
+      ],
+      "id": "cEsqOncWw0Xj"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "t5zczi6Iw0Xk"
+      },
+      "outputs": [],
+      "source": [
+        "# Demostración del problema de argumentos mutables por defecto\n",
+        "def malo(x, acc=[]):\n",
+        "    acc.append(x)\n",
+        "    return acc\n",
+        "\n",
+        "print(malo(1))  # [1]\n",
+        "print(malo(2))  # [1, 2]  <-- se acumula entre llamadas\n",
+        "\n",
+        "def bueno(x, acc=None):\n",
+        "    if acc is None:\n",
+        "        acc = []\n",
+        "    acc.append(x)\n",
+        "    return acc\n",
+        "\n",
+        "print(bueno(1))  # [1]\n",
+        "print(bueno(2))  # [2]  <-- independiente\n"
+      ],
+      "id": "t5zczi6Iw0Xk"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "V6pqkeGkw0Xk"
+      },
+      "source": [
+        "## 9) Ejercicios guiados\n",
+        "**9.1 Inmutables vs mutables**\n",
+        "1) Modifica `aumentar(n)` para trabajar con `float`.\n",
+        "2) Crea `reemplazar_lista_en_funcion(lst)` que haga `lst = []` dentro: ¿cambia la lista original? Explica por qué.\n",
+        "\n",
+        "**9.2 Objetos**\n",
+        "1) Implementa `renombrar(pokemon, nuevo)` que cambie el nombre **in-place**.\n",
+        "2) Implementa `rehacer_pokemon_local(pokemon)` que asigne `pokemon = Pokemon('Nuevo',1)` y explica por qué **no** reemplaza afuera.\n",
+        "\n",
+        "**9.3 Copias**\n",
+        "1) Usa `copy.copy` y `copy.deepcopy` sobre un objeto con lista interna; demuestra la diferencia.\n"
+      ],
+      "id": "V6pqkeGkw0Xk"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "0lQEcQlow0Xk"
+      },
+      "outputs": [],
+      "source": [
+        "# Espacio de trabajo de ejercicios\n",
+        "# 9.1\n",
+        "def aumentar_float(x):\n",
+        "    pass  # TODO\n",
+        "\n",
+        "def reemplazar_lista_en_funcion(lst):\n",
+        "    pass  # TODO (lst = [])\n",
+        "\n",
+        "# 9.2\n",
+        "def renombrar(pokemon, nuevo):\n",
+        "    pass  # TODO (pokemon.nombre = nuevo)\n",
+        "\n",
+        "def rehacer_pokemon_local(pokemon):\n",
+        "    pass  # TODO (pokemon = Pokemon('Nuevo',1))\n",
+        "\n",
+        "# 9.3\n",
+        "import copy\n",
+        "class Caja:\n",
+        "    def __init__(self, datos):\n",
+        "        self.datos = datos\n",
+        "\n",
+        "orig = Caja([1,2])\n",
+        "copia_s = copy.copy(orig)\n",
+        "copia_p = copy.deepcopy(orig)\n",
+        "\n",
+        "print(\"ids:\", id(orig), id(copia_s), id(copia_p))\n",
+        "# TODO: muta orig.datos y observa efectos en copia_s vs copia_p\n"
+      ],
+      "id": "0lQEcQlow0Xk"
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "GssohBOuw0Xk"
+      },
+      "source": [
+        "## 10) Reto final (integrador)\n",
+        "Implementa `modificar_todo(numero, lista, objeto)` que:\n",
+        "- sume 1 a **numero** (inmutable) y **lo devuelva**;\n",
+        "- agregue `\"X\"` a **lista** (mutable) **sin** devolverla;\n",
+        "- incremente el atributo `nivel` del **objeto** (mutable) **sin** devolverlo.\n",
+        "\n",
+        "Imprime antes/después y explica qué cambió y por qué.\n"
+      ],
+      "id": "GssohBOuw0Xk"
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 8,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "33oclTWew0Xk",
+        "outputId": "088466b8-a50b-4c44-ca55-5c4b4374ff48"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Antes -> n: 7 | arr: [1, 2] | e.nivel: 3\n",
+            "Después -> n: 7 (nuevo_n: None ) | arr: [1, 2] | e.nivel: 3\n"
+          ]
+        }
+      ],
+      "source": [
+        "class Entidad:\n",
+        "    def __init__(self, nivel):\n",
+        "        self.nivel = nivel\n",
+        "\n",
+        "def modificar_todo(numero, lista, objeto):\n",
+        "    # TODO: implementa lo pedido\n",
+        "    pass\n",
+        "\n",
+        "n = 7\n",
+        "arr = [1,2]\n",
+        "e = Entidad(3)\n",
+        "\n",
+        "print(\"Antes -> n:\", n, \"| arr:\", arr, \"| e.nivel:\", e.nivel)\n",
+        "nuevo_n = modificar_todo(n, arr, e)\n",
+        "print(\"Después -> n:\", n, \"(nuevo_n:\", nuevo_n, \") | arr:\", arr, \"| e.nivel:\", e.nivel)\n"
+      ],
+      "id": "33oclTWew0Xk"
+    }
+  ],
+  "metadata": {
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "name": "python",
+      "version": "3.x"
+    },
+    "colab": {
+      "provenance": []
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}
